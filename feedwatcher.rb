@@ -7,8 +7,6 @@ require 'rss'
 # longer need to report on
 class LinkStore
 
-  attr_reader :links
-
   def initialize(db_filename)
     @db_filename = File.expand_path(db_filename)
     @links = Hash.new
@@ -30,6 +28,14 @@ class LinkStore
   def too_old?(ts)
     # 172800 = 48h
     Time.now.to_i - ts > 172800
+  end
+
+  def seen?(link)
+    @links.has_key? link
+  end
+
+  def add(link, timestamp)
+    @links[link] = timestamp
   end
 
   # save the URLs we've encountered to a file
@@ -83,12 +89,12 @@ class Search
   def output
     output = ''
     @matches.each do |match|
-      output += match.feed_item.title
-      output += "\n"
-      output += match.feed_item.link
-      output += "\n"
-      output += '(Matches: ' + match.labels.join(', ') + ')'
-      output += "\n\n"
+      output << match.feed_item.title
+      output << "\n"
+      output << match.feed_item.link
+      output << "\n"
+      output << '(Matches: ' + match.labels.join(', ') + ')'
+      output << "\n\n"
     end
     output
   end
@@ -133,7 +139,7 @@ class Search
 
     feed.items.each do |feed_item|
       link = feed_item.link
-      if !@link_store.links.has_key?(link)
+      if !@link_store.seen?(link)
         #puts "examining ", feed_item.title
 
         @patterns.each do |label, regex|
@@ -144,7 +150,7 @@ class Search
           end
         end
 
-        @link_store.links[link] = feed_item.date.to_i
+        @link_store.add(link, feed_item.date.to_i)
       end
     end
 
@@ -179,7 +185,7 @@ if __FILE__ == $PROGRAM_NAME
     searches.each do |search|
       feed_watcher = Search.new(search[:patterns], search[:feed_urls], link_store, feed_cache)
       feed_watcher.scan
-      output += feed_watcher.output
+      output << feed_watcher.output
     end
 
     puts output if output.length > 0
