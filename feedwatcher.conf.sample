@@ -1,0 +1,24 @@
+# sample config file, copy this to ~/.feedwatcher.conf and modify
+[
+  {
+    patterns: {
+      'smoothie' => /smoothie/i,
+      'caad' => /caad\d*/i,
+      'giant defy' => /giant defy/i,
+      'touring' => /touring/i,
+    },
+    # this is an array because we may want the same search applied
+    # to multiple feeds
+    feed_urls: [ 'https://philadelphia.craigslist.org/search/bia?format=rss' ],
+  },
+  {
+    patterns: {
+      't440' => /t440/i,
+      't series' => /thinkpad t/i,
+      'w series' => /thinkpad w/i,
+    },
+    # this is an array because we may want the same search applied
+    # to multiple feeds
+    feed_urls: [ 'https://philadelphia.craigslist.org/search/sya?format=rss'],
+  },
+]
