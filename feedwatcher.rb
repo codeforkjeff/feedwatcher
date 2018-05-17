@@ -120,7 +120,12 @@ module Feedwatcher
 
         begin
           @feed_cache[feed_url] = RSS::Parser.parse(rssdata)
-        rescue
+        rescue Exception => e
+          # sometimes empty craigslist searches don't have item tags,
+          # causing RSS::Parser to barf
+          if e.message.include?("<item> is missing in tag <RDF>")
+            return nil
+          end
           puts "Error parsing, here's the data: #{rssdata}"
           raise
         end
@@ -140,6 +145,8 @@ module Feedwatcher
 
       feed = get_feed(feed_url)
 
+      return if !feed
+
       feed.items.each do |feed_item|
         link = feed_item.link
         title = CGI.unescapeHTML(feed_item.title)
@@ -154,7 +161,9 @@ module Feedwatcher
             end
           end
 
-          @link_store.add(link, feed_item.date.to_i)
+          #@link_store.add(link, feed_item.date.to_i)
+          # store w/ current timestamp (time when it was seen), not feed item timestamp
+          @link_store.add(link, Time.now.to_i)
         end
       end
 
